@@ -16,7 +16,7 @@ public class ProdutoRepository : IProdutoRepository
 
     public async Task AddAsync(Produto produto)
     {
-        _context.Set<Produtos>().Add(produto);
+        _context.Set<Produto>().Add(produto);
         await _context.SaveChangesAsync();
     }
 
@@ -25,24 +25,24 @@ public class ProdutoRepository : IProdutoRepository
         var produto = await GetByIdAsync(id);
         if(produto != null)
         {
-            _context.Set<Produtos>().Remove(produto);
+            _context.Set<Produto>().Remove(produto);
             await _context.SaveChangesAsync();
         }
     }
 
     public async Task<IEnumerable<Produto>> GetAllAsync()
     {
-        return await _context.Set<Produtos>().ToListAsync();
+        return await _context.Set<Produto>().ToListAsync();
     }
 
     public async Task<Produto?> GetByIdAsync(Guid id)
     {
-        return await _context.Set<Produtos>().FindAsync(id);
+        return await _context.Set<Produto>().FindAsync(id);
     }
 
     public async Task UpdateAsync(Produto produto)
     {
-        _context.Set<Produtos>().Update(produto);
+        _context.Set<Produto>().Update(produto);
         await _context.SaveChangesAsync();
     }
 }

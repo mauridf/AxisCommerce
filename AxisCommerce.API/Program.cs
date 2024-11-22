@@ -1,20 +1,7 @@
 using AxisCommerce.API.Atributes;
-using AxisCommerce.Application.Interfaces.Caixa;
-using AxisCommerce.Application.Interfaces.Clientes;
-using AxisCommerce.Application.Interfaces.Loja;
-using AxisCommerce.Application.Services.Caixa;
-using AxisCommerce.Application.Services.Clientes;
-using AxisCommerce.Application.Services.Lojas;
-using AxisCommerce.Domain.Interfaces.Autenticacao;
-using AxisCommerce.Domain.Interfaces.Caixa;
-using AxisCommerce.Domain.Interfaces.Clientes;
-using AxisCommerce.Domain.Interfaces.Loja;
+using AxisCommerce.API.Extensions;
+using AxisCommerce.API.Middlewares;
 using AxisCommerce.Infrastructure.Data;
-using AxisCommerce.Infrastructure.Repositories.Autenticacao;
-using AxisCommerce.Infrastructure.Repositories.Caixa;
-using AxisCommerce.Infrastructure.Repositories.Clientes;
-using AxisCommerce.Infrastructure.Repositories.Loja;
-using AxisCommerce.Infrastructure.Services.Autenticacao;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
@@ -22,11 +9,28 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .Enrich.FromLogContext()
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
+builder.Logging.ClearProviders();
+builder.Logging.AddSerilog();
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("String de conexão não configurada.");
+}
+
 // Adicionando o DbContext com a string de conexão
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Adicionando os controladores e a documentação do Swagger
 builder.Services.AddControllers();
@@ -115,62 +119,14 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
 });
 
-// Registrando o repositório e o serviço de armazenamento de arquivos
-builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.RegisterApplicationServices();
+builder.Services.RegisterRepositories();
 
-builder.Services.AddScoped<ICaixaControleRepository, CaixaControleRepository>();
-builder.Services.AddScoped<ICaixaFechamentoRepository, CaixaFechamentoRepository>();
-builder.Services.AddScoped<ICaixaLancamentoRepository, CaixaLancamentoRepository>();
-builder.Services.AddScoped<ICaixaRecebimentoRepository, CaixaRecebimentoRepository>();
-builder.Services.AddScoped<ICaixaRecebimentoPgtoRepository, CaixaRecebimentoPgtoRepository>();
-builder.Services.AddScoped<ITipoLancamentoRepository, TipoLancamentoRepository>();
-
-builder.Services.AddScoped<IClienteClassificacaoRepository, ClienteClassificacaoRepository>();
-builder.Services.AddScoped<IClienteEscolaridadeRepository, ClienteEscolaridadeRepository>();
-builder.Services.AddScoped<IClienteFaixaRendaRepository, ClienteFaixaRendaRepository>();
-builder.Services.AddScoped<IClienteProfissaoRepository, ClienteProfissaoRepository>();
-builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
-builder.Services.AddScoped<IClienteSubTipoRepository, ClienteSubTipoRepository>();
-builder.Services.AddScoped<IClienteTipoRepository, ClienteTipoRepository>();
-
-builder.Services.AddScoped<IFornecedorRepository, FornecedorRepository>();
-builder.Services.AddScoped<ILojaControleRepository, LojaControleRepository>();
-builder.Services.AddScoped<ILojaRepository, LojaRepository>();
-builder.Services.AddScoped<ILojaHorarioRepository, LojaHorarioRepository>();
-builder.Services.AddScoped<ITerminalRepository, TerminalRepository>();
-builder.Services.AddScoped<ITransportadoraRepository, TransportadoraRepository>();
-builder.Services.AddScoped<IVendedorRepository, VendedorRepository>();
-
-
-builder.Services.AddScoped<IUsuarioService, UsuarioService>();
-
-builder.Services.AddScoped<ICaixaControleService, CaixaControleService>();
-builder.Services.AddScoped<ICaixaFechamentoService, CaixaFechamentoService>();
-builder.Services.AddScoped<ICaixaLancamentoService, CaixaLancamentoService>();
-builder.Services.AddScoped<ICaixaRecebimentoService, CaixaRecebimentoService>();
-builder.Services.AddScoped<ICaixaRecebimentoPgtoService, CaixaRecebimentoPgtoService>();
-builder.Services.AddScoped<ITipoLancamentoService, TipoLancamentoService>();
-
-builder.Services.AddScoped<IClienteClassificacaoService, ClienteClassificacaoService>();
-builder.Services.AddScoped<IClienteEscolaridadeService, ClienteEscolaridadeService>();
-builder.Services.AddScoped<IClienteFaixaRendaService, ClienteFaixaRendaService>();
-builder.Services.AddScoped<IClienteProfissaoService, ClienteProfissaoService>();
-builder.Services.AddScoped<IClienteService, ClienteService>();
-builder.Services.AddScoped<IClienteSubTipoService, ClienteSubTipoService>();
-builder.Services.AddScoped<IClienteTipoService, ClienteTipoService>();
-
-builder.Services.AddScoped<IFornecedorService, FornecedorService>();
-builder.Services.AddScoped<ILojaControleService, LojaControleService>();
-builder.Services.AddScoped<ILojaService, LojaService>();
-builder.Services.AddScoped<ILojaHorarioService, LojaHorarioService>();
-builder.Services.AddScoped<ITerminalService, TerminalService>();
-builder.Services.AddScoped<ITransportadoraService, TransportadoraService>();
-builder.Services.AddScoped<IVendedorService, VendedorService>();
 
 // Configuração de CORS para permitir o frontend em React
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("ReactAppPolicy", policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
         policy.WithOrigins("http://localhost:3000") // Substitua pelo endereço correto do frontend
               .AllowAnyHeader()
@@ -213,10 +169,12 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseMiddleware<ExceptionMiddleware>();
+
 app.UseHttpsRedirection();
 
-app.UseCors("ReactAppPolicy"); // Ativando a política de CORS
-app.UseAuthentication();        // Adiciona autenticação ao pipeline
+app.UseCors("AllowAll"); // Ativando a política de CORS
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
