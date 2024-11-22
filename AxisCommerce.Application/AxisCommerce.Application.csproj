@@ -22,8 +22,6 @@
     <Folder Include="Interfaces\Produto\" />
     <Folder Include="Interfaces\Pedidos\" />
     <Folder Include="Interfaces\Pagamento\" />
-    <Folder Include="Services\Vendas\" />
-    <Folder Include="Services\Produto\" />
     <Folder Include="Services\Pedidos\" />
     <Folder Include="Services\Pagamento\" />
   </ItemGroup>
