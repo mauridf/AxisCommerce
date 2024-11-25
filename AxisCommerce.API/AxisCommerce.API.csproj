@@ -28,9 +28,4 @@
     <ProjectReference Include="..\AxisCommerce.Infrastructure\AxisCommerce.Infrastructure.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\Vendas\" />
-    <Folder Include="Controllers\Produtos\" />
-  </ItemGroup>
-
 </Project>
