@@ -18,6 +18,6 @@ public enum ApiGroupNames
     Pedido,
     [GroupInfo(Title = "7 - Produto", Description = "AxisCommerce - Produto")]
     Produto,
-    [GroupInfo(Title = "8 - Vendas", Description = "AxisCommerce - Vendas")]
+    [GroupInfo(Title = "8 - Venda", Description = "AxisCommerce - Venda")]
     Venda,
 }

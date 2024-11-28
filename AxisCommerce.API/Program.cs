@@ -55,6 +55,7 @@ builder.Services.AddApiVersioning(options =>
     options.ReportApiVersions = true;
 });
 
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     typeof(ApiGroupNames).GetFields().Skip(1).ToList().ForEach(f =>
@@ -158,6 +159,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {

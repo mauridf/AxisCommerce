@@ -177,7 +177,7 @@ public class OperacaoVendaController : ControllerBase
         }
     }
 
-    [HttpDelete("deletar-conicao-de-pagamento/{id:guid}")]
+    [HttpDelete("deletar-condicao-de-pagamento/{id:guid}")]
     public async Task<IActionResult> DeleteCondicaoPagto(Guid id)
     {
         try
@@ -289,14 +289,14 @@ public class OperacaoVendaController : ControllerBase
         }
     }
 
-    [HttpGet("buscar-operacao-de-venda-por-id/{id:guid}")]
+    [HttpGet("buscar-tipo-operacao-de-venda-por-id/{id:guid}")]
     public async Task<IActionResult> GetTipoOperacaoVendaById(Guid id)
     {
         try
         {
-            var operacaoVenda = await _tipoOperacaoVendaService.GetByIdAsync(id);
-            if (operacaoVenda == null) return NotFound(new { message = "Tipo Operação de Venda não encontrado." });
-            return Ok(operacaoVenda);
+            var tipoOperacaoVenda = await _tipoOperacaoVendaService.GetByIdAsync(id);
+            if (tipoOperacaoVenda == null) return NotFound(new { message = "Tipo Operação de Venda não encontrado." });
+            return Ok(tipoOperacaoVenda);
         }
         catch (Exception ex)
         {
